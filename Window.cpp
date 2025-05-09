@@ -202,9 +202,37 @@ Window::Window(const char* title) {
     swapChainCreateInfo.presentMode = presentMode;
     vkCreateSwapchainKHR(logicalDevice, &swapChainCreateInfo, nullptr, &swapChain);
 
+    uint32_t swapChainImageCount;
+    vkGetSwapchainImagesKHR(logicalDevice, swapChain, &swapChainImageCount, nullptr);
+    std::vector<VkImage> swapChainImages(swapChainImageCount);
+    vkGetSwapchainImagesKHR(logicalDevice, swapChain, &swapChainImageCount, swapChainImages.data());
+    std::vector<VkImageView> swapChainImageView(swapChainImages.size());
 
-    
+    for (size_t i = 0; i < swapChainImages.size(); i++)
+    {
+        VkImageViewCreateInfo imageViewCreateInfo{};
+        imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        imageViewCreateInfo.image = swapChainImages[i];
+        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; // 2d/3d графика
+        imageViewCreateInfo.format = surfaceFormat.format;
+        // индентичность цветов
+        imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY; // красный - красный
+        imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY; // зелёный  = зелёному и тд.
+        imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+        imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; // тип изображения
+
+        // mip maping
+        imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+        imageViewCreateInfo.subresourceRange.levelCount = 1;
+        imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+        imageViewCreateInfo.subresourceRange.layerCount = 1;
+        vkCreateImageView(logicalDevice, &imageViewCreateInfo, nullptr, &swapChainImageView[i]);
+
+    }
 }
+
 
 
 
