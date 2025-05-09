@@ -21,5 +21,6 @@
 		VkInstance  instance = {};
 		GLFWwindow* window = nullptr;
 		VkPhysicalDeviceProperties  GPU_info;
+		VkSurfaceKHR surface;
 	};
 
