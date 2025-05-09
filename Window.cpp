@@ -37,16 +37,16 @@ Window::Window(const char* title) {
 
     
     glfwCreateWindowSurface(instance, window,nullptr,&surface);
-    // получение кол-ва девайсов
+    // ГЇГ®Г«ГіГ·ГҐГ­ГЁГҐ ГЄГ®Г«-ГўГ  Г¤ГҐГўГ Г©Г±Г®Гў
     vkEnumeratePhysicalDevices(instance,&deviceCount,nullptr);
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-    // получение текущей видеокарты
-    VkPhysicalDevice physicalDevice = devices.data()[0]; // текущая видеокарта
+    // ГЇГ®Г«ГіГ·ГҐГ­ГЁГҐ ГІГҐГЄГіГ№ГҐГ© ГўГЁГ¤ГҐГ®ГЄГ Г°ГІГ»
+    VkPhysicalDevice physicalDevice = devices.data()[0]; // ГІГҐГЄГіГ№Г Гї ГўГЁГ¤ГҐГ®ГЄГ Г°ГІГ 
     
-    vkGetPhysicalDeviceProperties(physicalDevice, &GPU_info); // информация о видеокарте
+    vkGetPhysicalDeviceProperties(physicalDevice, &GPU_info); // ГЁГ­ГґГ®Г°Г¬Г Г¶ГЁГї Г® ГўГЁГ¤ГҐГ®ГЄГ Г°ГІГҐ
 
-    // кол-во потоков и инфа о них
+    // ГЄГ®Г«-ГўГ® ГЇГ®ГІГ®ГЄГ®Гў ГЁ ГЁГ­ГґГ  Г® Г­ГЁГµ
     uint32_t graphicsQueueFamilyIndex = 0;
     uint32_t presentQueueFamilyIndex = 0;
     uint32_t queueFamilyCount = 0;
@@ -55,7 +55,7 @@ Window::Window(const char* title) {
     std::vector<VkQueueFamilyProperties>families(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, families.data());
     VkBool32 presentSupport;
-    // определение функции потоков
+    // Г®ГЇГ°ГҐГ¤ГҐГ«ГҐГ­ГЁГҐ ГґГіГ­ГЄГ¶ГЁГЁ ГЇГ®ГІГ®ГЄГ®Гў
     for (size_t i = 0; i < families.size(); i++)
     {
 
@@ -75,7 +75,7 @@ Window::Window(const char* title) {
         
     }
 
-    // поток графики (урок 6)
+    // ГЇГ®ГІГ®ГЄ ГЈГ°Г ГґГЁГЄГЁ (ГіГ°Г®ГЄ 6)
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 
@@ -88,7 +88,7 @@ Window::Window(const char* title) {
    
 
 
-    float queuePriority = 1.0f;  // приоритет выполнения задач, отрисовка или отображение, 1 - нейтрально
+    float queuePriority = 1.0f;  // ГЇГ°ГЁГ®Г°ГЁГІГҐГІ ГўГ»ГЇГ®Г«Г­ГҐГ­ГЁГї Г§Г Г¤Г Г·, Г®ГІГ°ГЁГ±Г®ГўГЄГ  ГЁГ«ГЁ Г®ГІГ®ГЎГ°Г Г¦ГҐГ­ГЁГҐ, 1 - Г­ГҐГ©ГІГ°Г Г«ГјГ­Г®
     for (const uint32_t queueFamily : qniqueQueue)
     {
 
@@ -114,7 +114,7 @@ Window::Window(const char* title) {
 
     };
 
-    // логический девайс
+    // Г«Г®ГЈГЁГ·ГҐГ±ГЄГЁГ© Г¤ГҐГўГ Г©Г±
     VkDeviceCreateInfo deviceCreateInfo = {};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.enabledExtensionCount = (uint32_t) deviceExtensions.size();
@@ -126,10 +126,10 @@ Window::Window(const char* title) {
 
 
     
-    vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &logicalDevice);
+    vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &logicalDevice); // СЃРѕР·РґР°РЅРёРµ РґРµРІР°Р№СЃР°
 
 
-    uint32_t formatsCount; // форматы видеокарты
+    uint32_t formatsCount; // ГґГ®Г°Г¬Г ГІГ» ГўГЁГ¤ГҐГ®ГЄГ Г°ГІГ»
 
     vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatsCount, nullptr);
     std::vector<VkSurfaceFormatKHR> formats(formatsCount);
@@ -155,7 +155,7 @@ Window::Window(const char* title) {
 
 
 
-    VkSwapchainKHR swapChain; // буфер
+    VkSwapchainKHR swapChain; // ГЎГіГґГҐГ°
     VkSwapchainCreateInfoKHR swapChainCreateInfo = {};
     swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     swapChainCreateInfo.surface = surface;
@@ -163,7 +163,7 @@ Window::Window(const char* title) {
     swapChainCreateInfo.clipped = VK_TRUE;
     swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
     swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    swapChainCreateInfo.imageArrayLayers = 1; // кол-во возможных слоёв для отрисовки
+    swapChainCreateInfo.imageArrayLayers = 1; // ГЄГ®Г«-ГўГ® ГўГ®Г§Г¬Г®Г¦Г­Г»Гµ Г±Г«Г®ВёГў Г¤Г«Гї Г®ГІГ°ГЁГ±Г®ГўГЄГЁ
     swapChainCreateInfo.imageExtent = extent;
     swapChainCreateInfo.minImageCount = imageCount;
     swapChainCreateInfo.preTransform = capabilities.currentTransform;
@@ -213,15 +213,15 @@ Window::Window(const char* title) {
         VkImageViewCreateInfo imageViewCreateInfo{};
         imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         imageViewCreateInfo.image = swapChainImages[i];
-        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; // 2d/3d графика
+        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; // 2d/3d ГЈГ°Г ГґГЁГЄГ 
         imageViewCreateInfo.format = surfaceFormat.format;
-        // индентичность цветов
-        imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY; // красный - красный
-        imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY; // зелёный  = зелёному и тд.
+        // ГЁГ­Г¤ГҐГ­ГІГЁГ·Г­Г®Г±ГІГј Г¶ГўГҐГІГ®Гў
+        imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY; // ГЄГ°Г Г±Г­Г»Г© - ГЄГ°Г Г±Г­Г»Г©
+        imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY; // Г§ГҐГ«ВёГ­Г»Г©  = Г§ГҐГ«ВёГ­Г®Г¬Гі ГЁ ГІГ¤.
         imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
         imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
-        imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; // тип изображения
+        imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; // ГІГЁГЇ ГЁГ§Г®ГЎГ°Г Г¦ГҐГ­ГЁГї
 
         // mip maping
         imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
@@ -234,7 +234,7 @@ Window::Window(const char* title) {
         //render Pass
         VkAttachmentDescription colorAttachmentDescription{};
         colorAttachmentDescription.format = surfaceFormat.format;
-        colorAttachmentDescription.samples = sampleBits; // сглаживание
+        colorAttachmentDescription.samples = sampleBits; // Г±ГЈГ«Г Г¦ГЁГўГ Г­ГЁГҐ
         colorAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         colorAttachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
