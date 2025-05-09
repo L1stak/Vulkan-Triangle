@@ -7,6 +7,7 @@
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
 #include <vector>
+
 //#include <vulkan/vulkan.h>
 	class Window
 	{
@@ -15,6 +16,7 @@
 		Window(const char* title);
 		~Window();
 		void Display();
+		void LoadShaders();
 		GLFWwindow* GetCurrentWindow();
 	private:
 
@@ -24,5 +26,7 @@
 		VkSurfaceKHR surface;
 		VkDevice logicalDevice;
 		VkRenderPass renderPass;
+		VkShaderModule vertModule;
+		VkShaderModule fragModule;
 	};
 

@@ -21,6 +21,9 @@
     <ClCompile Include="Window.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.h">
@@ -29,9 +32,18 @@
     <ClInclude Include="Constants.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="glfw3.dll">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="shaders\shader.frag">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="shaders\shader.vert">
       <Filter>Файлы ресурсов</Filter>
     </None>
   </ItemGroup>

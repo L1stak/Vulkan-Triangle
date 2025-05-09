@@ -2,6 +2,8 @@
 #include "Constants.h"
 #include <iostream>
 #include <set>
+#include "Shader.h"
+Shader* shader = new Shader();
 Window::Window(const char* title) {
 
     glfwInit();
@@ -276,6 +278,35 @@ Window::~Window() {
 	glfwDestroyWindow(window);
 
 	glfwTerminate();
+}
+
+int shaderCount = 2;
+std::vector<char> shaderCode;
+std::vector <VkShaderModule> shadersModules(shaderCount);
+void Window::LoadShaders() {
+
+    for (size_t i = 0; i < shaderCount; i++)
+    {
+        VkShaderModuleCreateInfo ShaderModuleCreateInfo{};
+        if (i == 1) {
+            shaderCode = shader->ReadShader("shaders/vert.spv");
+        }
+        else {
+            shaderCode = shader->ReadShader("shaders/frag.spv");
+
+        }
+        ShaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        ShaderModuleCreateInfo.codeSize = shaderCode.size();
+        ShaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
+        VkShaderModule ShaderModule;
+
+        vkCreateShaderModule(logicalDevice, &ShaderModuleCreateInfo, nullptr, &ShaderModule);
+        shadersModules.push_back(ShaderModule);
+    }
+    
+    vertModule = shadersModules[0];
+    fragModule = shadersModules[1];
+
 }
 
 GLFWwindow* Window::GetCurrentWindow() {
