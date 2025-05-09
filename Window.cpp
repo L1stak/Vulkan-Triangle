@@ -109,16 +109,49 @@ Window::Window(const char* title) {
     
     queueCreateInfos.push_back(queueInfo);
 
+    const std::vector<const char*> deviceExtensions = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+
+    };
+
     // логический девайс
     VkDeviceCreateInfo deviceCreateInfo = {};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    deviceCreateInfo.enabledExtensionCount = (uint32_t)0;
+    deviceCreateInfo.enabledExtensionCount = (uint32_t) deviceExtensions.size();
     deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+    deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
     deviceCreateInfo.queueCreateInfoCount = (uint32_t)queueCreateInfos.size();
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
 
+
+
     VkDevice logicalDevice;
     vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &logicalDevice);
+
+
+    uint32_t formatsCount; // форматы видеокарты
+
+    vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatsCount, nullptr);
+    std::vector<VkSurfaceFormatKHR> formats(formatsCount);
+
+    vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatsCount, formats.data());
+
+
+    VkSurfaceFormatKHR surfaceFormat = formats.data()[0];
+
+    for (VkSurfaceFormatKHR avalibleFormat : formats)
+    {
+        if (avalibleFormat.colorSpace == VK_COLORSPACE_SRGB_NONLINEAR_KHR && avalibleFormat.format == VK_FORMAT_B8G8R8_SRGB) {
+
+            surfaceFormat = avalibleFormat;
+            break;
+        }
+    }
+    VkSurfaceCapabilitiesKHR capabilities;
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
+
+    VkExtent2D extent = capabilities.currentExtent;
+    uint32_t imageCount = capabilities.minImageCount + 1;
 
 
 
@@ -131,8 +164,11 @@ Window::Window(const char* title) {
     swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
     swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     swapChainCreateInfo.imageArrayLayers = 1; // кол-во возможных слоёв для отрисовки
-    
-
+    swapChainCreateInfo.imageExtent = extent;
+    swapChainCreateInfo.minImageCount = imageCount;
+    swapChainCreateInfo.preTransform = capabilities.currentTransform;
+    swapChainCreateInfo.imageFormat = surfaceFormat.format;
+    swapChainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
 
     uint32_t queueFamilyIndices[] = { graphicsQueueFamilyIndex, presentQueueFamilyIndex };
 
@@ -163,17 +199,11 @@ Window::Window(const char* title) {
             break;
         }
     }
-
-    uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
-    std::vector<VkSurfaceFormatKHR> formats(formatCount);
-    vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, formats.data());
-
     swapChainCreateInfo.presentMode = presentMode;
-    vkCreateSwapchainKHR(logicalDevice,&swapChainCreateInfo,nullptr,&swapChain);
+    vkCreateSwapchainKHR(logicalDevice, &swapChainCreateInfo, nullptr, &swapChain);
 
 
-
+    
 }
 
 
