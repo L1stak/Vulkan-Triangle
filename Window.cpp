@@ -325,6 +325,22 @@ Window::Window(const char* title) {
     PipelineInputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     PipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
+    VkPipelineViewportStateCreateInfo PipelineViewportStateCreateInfo{};
+    PipelineViewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    PipelineViewportStateCreateInfo.viewportCount = 1;
+    PipelineViewportStateCreateInfo.scissorCount = 1;
+
+    VkPipelineRasterizationStateCreateInfo PipelineRasterizationStateCreateInfo{};
+    PipelineRasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    PipelineRasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
+    PipelineRasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
+    PipelineRasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
+    PipelineRasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+    PipelineRasterizationStateCreateInfo.lineWidth = 1.0f;
+    PipelineRasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+    PipelineRasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+
+
 
     VkGraphicsPipelineCreateInfo GraphicsPipelineCreateInfo{};
     GraphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -332,8 +348,8 @@ Window::Window(const char* title) {
     GraphicsPipelineCreateInfo.pStages = shaderStages;
     GraphicsPipelineCreateInfo.pVertexInputState = &pipelineVertexInputStateCreateInfo;
     GraphicsPipelineCreateInfo.pInputAssemblyState = &PipelineInputAssemblyStateCreateInfo;
-
-    
+    GraphicsPipelineCreateInfo.pViewportState = &PipelineViewportStateCreateInfo;
+    GraphicsPipelineCreateInfo.pRasterizationState = &PipelineRasterizationStateCreateInfo;
     vkCreateGraphicsPipelines(logicalDevice, VK_NULL_HANDLE, 1, &GraphicsPipelineCreateInfo,nullptr,&graphicsPipeline);
 }
 
