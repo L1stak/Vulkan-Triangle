@@ -8,6 +8,9 @@ Shader* shader = new Shader();
 int shaderCount = 2;
 std::vector<char> shaderCode;
 std::vector <VkShaderModule> shadersModules(shaderCount);
+std::vector<VkFence> inFlightFences(MAX_FRAMES_IN_FLIGHT);
+std::vector<VkCommandBuffer> commandBuffers(MAX_FRAMES_IN_FLIGHT);
+std::vector<VkSemaphore> imageAvalibleSemaphores(MAX_FRAMES_IN_FLIGHT);
 void Window::LoadShaders() {
 
     for (size_t i = 0; i < shaderCount; i++)
@@ -186,7 +189,7 @@ Window::Window(const char* title) {
 
 
 
-    VkSwapchainKHR swapChain; // буфер
+    
     VkSwapchainCreateInfoKHR swapChainCreateInfo = {};
     swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     swapChainCreateInfo.surface = surface;
@@ -283,6 +286,17 @@ Window::Window(const char* title) {
         subpassDescription.pColorAttachments = &colorAttachmentReference;
         subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 
+        VkSubpassDependency SubpassDependency{};
+        SubpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        SubpassDependency.dstSubpass = 0;
+        SubpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        SubpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        SubpassDependency.srcAccessMask = 0;
+        SubpassDependency.dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
+
+
+
+
 
 
         VkRenderPassCreateInfo renderPassCreateInfo{};
@@ -291,6 +305,8 @@ Window::Window(const char* title) {
         renderPassCreateInfo.pAttachments = &colorAttachmentDescription;
         renderPassCreateInfo.subpassCount = 1;
         renderPassCreateInfo.pSubpasses = &subpassDescription;
+        renderPassCreateInfo.dependencyCount = 1;
+        renderPassCreateInfo.pDependencies = &SubpassDependency;
 
 
         vkCreateRenderPass(logicalDevice, &renderPassCreateInfo, nullptr, &renderPass);
@@ -420,6 +436,44 @@ Window::Window(const char* title) {
         vkCreateFramebuffer(logicalDevice, &FramebufferCreateInfo, nullptr, &swapChainFrameBuffers[i]);
 
     }
+   
+    VkCommandPoolCreateInfo CommandPoolCreateInfo{};
+    CommandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    CommandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    CommandPoolCreateInfo.queueFamilyIndex = graphicsQueueFamilyIndex;
+
+
+    vkCreateCommandPool(logicalDevice,&CommandPoolCreateInfo,nullptr,&commandPool);
+
+    VkCommandBufferAllocateInfo CommandBufferAllocateInfo{};
+    CommandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    CommandBufferAllocateInfo.commandBufferCount =  (uint32_t)commandBuffers.size();
+    CommandBufferAllocateInfo.commandPool = commandPool;
+    CommandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
+    vkAllocateCommandBuffers(logicalDevice, &CommandBufferAllocateInfo, commandBuffers.data());
+
+    
+    
+    std::vector<VkSemaphore> renderFinishedSemaphores(MAX_FRAMES_IN_FLIGHT);
+
+    VkSemaphoreCreateInfo SemaphoreCreateInfo{};
+    SemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    VkFenceCreateInfo FenceCreateInfo{};
+    FenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        vkCreateSemaphore(logicalDevice, &SemaphoreCreateInfo, nullptr, &imageAvalibleSemaphores[i]);
+        vkCreateSemaphore(logicalDevice, &SemaphoreCreateInfo, nullptr, &renderFinishedSemaphores[i]);
+        vkCreateFence(logicalDevice, &FenceCreateInfo, nullptr, &inFlightFences[i]);
+
+
+    }
+        
+    vkGetDeviceQueue(logicalDevice, graphicsQueueFamilyIndex, 0, &graphicsQueue);
+    vkGetDeviceQueue(logicalDevice, presentQueueFamilyIndex, 0, &presentQueue);
 
 }
 
@@ -434,11 +488,47 @@ Window::~Window() {
 	glfwTerminate();
 }
 
+VkQueue Window::GetGraphicsQueue() {
 
+    return graphicsQueue;
+}
 
+VkQueue Window::GetPresentQueue() {
+
+    return presentQueue;
+}
 
 GLFWwindow* Window::GetCurrentWindow() {
 
     return window;
     
+}
+
+std::vector<VkFence> Window::GetinFlightFences() {
+
+    return inFlightFences;
+
+}
+std::vector<VkCommandBuffer> Window::GetCommandBuffer() {
+
+    return commandBuffers;
+}
+
+std::vector<VkSemaphore> GetLogicalDevice() {
+
+    return imageAvalibleSemaphores;
+}
+VkDevice Window::GetLogicalDevice()
+{
+
+    return logicalDevice;
+
+}
+VkSwapchainKHR Window::GetSwapChain() {
+    return swapChain;
+
+}
+std::vector<VkSemaphore> Window::GetImageAvalibleSemaphores() {
+
+    return imageAvalibleSemaphores;
 }
