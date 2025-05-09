@@ -329,7 +329,7 @@ Window::Window(const char* title) {
     PipelineViewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     PipelineViewportStateCreateInfo.viewportCount = 1;
     PipelineViewportStateCreateInfo.scissorCount = 1;
-
+    // Растеризация
     VkPipelineRasterizationStateCreateInfo PipelineRasterizationStateCreateInfo{};
     PipelineRasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     PipelineRasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
@@ -339,8 +339,43 @@ Window::Window(const char* title) {
     PipelineRasterizationStateCreateInfo.lineWidth = 1.0f;
     PipelineRasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
     PipelineRasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    // сглаживание
+    VkPipelineMultisampleStateCreateInfo PipelineMultisampleStateCreateInfo{};
+    PipelineMultisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    PipelineMultisampleStateCreateInfo.sampleShadingEnable = VK_FALSE; // сглавживание
+    PipelineMultisampleStateCreateInfo.rasterizationSamples = sampleBits;
+    
+    // смешивание цветов
+    VkPipelineColorBlendAttachmentState PipelineColorBlendAttachmentState{};
+    PipelineColorBlendAttachmentState.blendEnable = VK_FALSE;
+    PipelineColorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    
+
+    VkPipelineColorBlendStateCreateInfo PipelineColorBlendStateCreateInfo{};
+    PipelineColorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    PipelineColorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
+    PipelineColorBlendStateCreateInfo.attachmentCount = 1;
+    PipelineColorBlendStateCreateInfo.pAttachments = &PipelineColorBlendAttachmentState;
+
+    std::vector<VkDynamicState> dynamicStates = {
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR
+
+    };
+    VkPipelineDynamicStateCreateInfo PipelineDynamicStateCreateInfo{};
+    PipelineDynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    PipelineDynamicStateCreateInfo.dynamicStateCount = (uint32_t) dynamicStates.size();
+    PipelineDynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
 
 
+    VkPipelineLayoutCreateInfo  PipelineLayoutCreateInfo{};
+    PipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    PipelineLayoutCreateInfo.setLayoutCount = 0;
+    PipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+
+
+    
+    vkCreatePipelineLayout(logicalDevice, &PipelineLayoutCreateInfo, nullptr, &pipelineLayout);
 
     VkGraphicsPipelineCreateInfo GraphicsPipelineCreateInfo{};
     GraphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -350,7 +385,42 @@ Window::Window(const char* title) {
     GraphicsPipelineCreateInfo.pInputAssemblyState = &PipelineInputAssemblyStateCreateInfo;
     GraphicsPipelineCreateInfo.pViewportState = &PipelineViewportStateCreateInfo;
     GraphicsPipelineCreateInfo.pRasterizationState = &PipelineRasterizationStateCreateInfo;
+    GraphicsPipelineCreateInfo.pMultisampleState = &PipelineMultisampleStateCreateInfo;
+    GraphicsPipelineCreateInfo.pColorBlendState = &PipelineColorBlendStateCreateInfo;
+    GraphicsPipelineCreateInfo.pDynamicState = &PipelineDynamicStateCreateInfo;
+    GraphicsPipelineCreateInfo.layout = pipelineLayout;
+    GraphicsPipelineCreateInfo.renderPass = renderPass;
+    GraphicsPipelineCreateInfo.subpass = 0;
+    GraphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
+
+    
     vkCreateGraphicsPipelines(logicalDevice, VK_NULL_HANDLE, 1, &GraphicsPipelineCreateInfo,nullptr,&graphicsPipeline);
+
+
+    vkDestroyShaderModule(logicalDevice, vertModule, nullptr);
+    vkDestroyShaderModule(logicalDevice, fragModule, nullptr);
+
+    std::vector<VkFramebuffer> swapChainFrameBuffers(swapChainImageView.size());
+
+    for (size_t i = 0; i < swapChainImageView.size(); i++)
+    {
+        VkImageView attachements[] = {swapChainImageView[i]};
+        VkFramebufferCreateInfo FramebufferCreateInfo{};
+        FramebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        FramebufferCreateInfo.renderPass = renderPass;
+        FramebufferCreateInfo.attachmentCount = 1;
+        FramebufferCreateInfo.pAttachments = attachements;
+        FramebufferCreateInfo.width = extent.width;
+        FramebufferCreateInfo.height = extent.height;
+        FramebufferCreateInfo.layers = 1; // слои
+       
+
+
+
+        vkCreateFramebuffer(logicalDevice, &FramebufferCreateInfo, nullptr, &swapChainFrameBuffers[i]);
+
+    }
+
 }
 
 

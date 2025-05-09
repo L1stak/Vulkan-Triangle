@@ -29,5 +29,6 @@
 		VkShaderModule vertModule;
 		VkShaderModule fragModule;
 		VkPipeline graphicsPipeline = NULL;
+		VkPipelineLayout pipelineLayout;
 	};
 
