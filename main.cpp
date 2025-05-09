@@ -4,7 +4,7 @@ Window* win = new Window("vulkan test");
 int main() {
    
     GLFWwindow* currentWindow = win->GetCurrentWindow();
-
+    
     while (!glfwWindowShouldClose(currentWindow)) {
         glfwPollEvents();
     }

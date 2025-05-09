@@ -4,6 +4,35 @@
 #include <set>
 #include "Shader.h"
 Shader* shader = new Shader();
+
+int shaderCount = 2;
+std::vector<char> shaderCode;
+std::vector <VkShaderModule> shadersModules(shaderCount);
+void Window::LoadShaders() {
+
+    for (size_t i = 0; i < shaderCount; i++)
+    {
+        VkShaderModuleCreateInfo ShaderModuleCreateInfo{};
+        if (i == 1) {
+            shaderCode = shader->ReadShader("shaders/vert.spv");
+        }
+        else {
+            shaderCode = shader->ReadShader("shaders/frag.spv");
+
+        }
+        ShaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        ShaderModuleCreateInfo.codeSize = shaderCode.size();
+        ShaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
+        VkShaderModule ShaderModule;
+
+        vkCreateShaderModule(logicalDevice, &ShaderModuleCreateInfo, nullptr, &ShaderModule);
+        shadersModules.push_back(ShaderModule);
+    }
+
+    vertModule = shadersModules[0];
+    fragModule = shadersModules[1];
+
+}
 Window::Window(const char* title) {
 
     glfwInit();
@@ -39,16 +68,16 @@ Window::Window(const char* title) {
 
     
     glfwCreateWindowSurface(instance, window,nullptr,&surface);
-    // ïîëó÷åíèå êîë-âà äåâàéñîâ
+    // получение видеокарт
     vkEnumeratePhysicalDevices(instance,&deviceCount,nullptr);
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-    // ïîëó÷åíèå òåêóùåé âèäåîêàðòû
+   
     VkPhysicalDevice physicalDevice = devices.data()[0]; // òåêóùàÿ âèäåîêàðòà
     
-    vkGetPhysicalDeviceProperties(physicalDevice, &GPU_info); // èíôîðìàöèÿ î âèäåîêàðòå
+    vkGetPhysicalDeviceProperties(physicalDevice, &GPU_info); // получение информации о видеокарте
 
-    // êîë-âî ïîòîêîâ è èíôà î íèõ
+    // id Потоков видеокарты
     uint32_t graphicsQueueFamilyIndex = 0;
     uint32_t presentQueueFamilyIndex = 0;
     uint32_t queueFamilyCount = 0;
@@ -57,7 +86,7 @@ Window::Window(const char* title) {
     std::vector<VkQueueFamilyProperties>families(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, families.data());
     VkBool32 presentSupport;
-    // îïðåäåëåíèå ôóíêöèè ïîòîêîâ
+    // определение принадлежности потоков
     for (size_t i = 0; i < families.size(); i++)
     {
 
@@ -77,7 +106,7 @@ Window::Window(const char* title) {
         
     }
 
-    // ïîòîê ãðàôèêè (óðîê 6)
+
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 
@@ -90,7 +119,7 @@ Window::Window(const char* title) {
    
 
 
-    float queuePriority = 1.0f;  // ïðèîðèòåò âûïîëíåíèÿ çàäà÷, îòðèñîâêà èëè îòîáðàæåíèå, 1 - íåéòðàëüíî
+    float queuePriority = 1.0f;  // приоритет выполнения операций, 1 - нейтральный
     for (const uint32_t queueFamily : qniqueQueue)
     {
 
@@ -116,7 +145,7 @@ Window::Window(const char* title) {
 
     };
 
-    // ëîãè÷åñêèé äåâàéñ
+    // Логический девайс
     VkDeviceCreateInfo deviceCreateInfo = {};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.enabledExtensionCount = (uint32_t) deviceExtensions.size();
@@ -131,7 +160,7 @@ Window::Window(const char* title) {
     vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &logicalDevice); // создание девайса
 
 
-    uint32_t formatsCount; // ôîðìàòû âèäåîêàðòû
+    uint32_t formatsCount; // форматы видеокарты
 
     vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatsCount, nullptr);
     std::vector<VkSurfaceFormatKHR> formats(formatsCount);
@@ -157,7 +186,7 @@ Window::Window(const char* title) {
 
 
 
-    VkSwapchainKHR swapChain; // áóôåð
+    VkSwapchainKHR swapChain; // буфер
     VkSwapchainCreateInfoKHR swapChainCreateInfo = {};
     swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     swapChainCreateInfo.surface = surface;
@@ -165,7 +194,7 @@ Window::Window(const char* title) {
     swapChainCreateInfo.clipped = VK_TRUE;
     swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
     swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    swapChainCreateInfo.imageArrayLayers = 1; // êîë-âî âîçìîæíûõ ñëî¸â äëÿ îòðèñîâêè
+    swapChainCreateInfo.imageArrayLayers = 1; // кол-во слоёв
     swapChainCreateInfo.imageExtent = extent;
     swapChainCreateInfo.minImageCount = imageCount;
     swapChainCreateInfo.preTransform = capabilities.currentTransform;
@@ -215,15 +244,15 @@ Window::Window(const char* title) {
         VkImageViewCreateInfo imageViewCreateInfo{};
         imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         imageViewCreateInfo.image = swapChainImages[i];
-        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; // 2d/3d ãðàôèêà
+        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; // 2d/3d графика
         imageViewCreateInfo.format = surfaceFormat.format;
-        // èíäåíòè÷íîñòü öâåòîâ
-        imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY; // êðàñíûé - êðàñíûé
-        imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY; // çåë¸íûé  = çåë¸íîìó è òä.
+        // определение цветов
+        imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY; // красный - красный, определение цветов
+        imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY; // 
         imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
         imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 
-        imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; // òèï èçîáðàæåíèÿ
+        imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; // тип изображения (цвет/глубина)
 
         // mip maping
         imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
@@ -236,7 +265,7 @@ Window::Window(const char* title) {
         //render Pass
         VkAttachmentDescription colorAttachmentDescription{};
         colorAttachmentDescription.format = surfaceFormat.format;
-        colorAttachmentDescription.samples = sampleBits; // ñãëàæèâàíèå
+        colorAttachmentDescription.samples = sampleBits; // сглаживание
         colorAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         colorAttachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -267,6 +296,45 @@ Window::Window(const char* title) {
         vkCreateRenderPass(logicalDevice, &renderPassCreateInfo, nullptr, &renderPass);
 
     }
+    // подключение шейдеров , создание графического конвеера
+    LoadShaders();
+    VkPipelineShaderStageCreateInfo vertPipelineShaderStageCreateInfo{};
+    vertPipelineShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertPipelineShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vertPipelineShaderStageCreateInfo.module = vertModule;
+    vertPipelineShaderStageCreateInfo.pName = "main";
+
+
+    VkPipelineShaderStageCreateInfo fragPipelineShaderStageCreateInfo{};
+    fragPipelineShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fragPipelineShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    fragPipelineShaderStageCreateInfo.module = fragModule;
+    fragPipelineShaderStageCreateInfo.pName = "main";
+
+
+    VkPipelineShaderStageCreateInfo shaderStages[] = { vertPipelineShaderStageCreateInfo , fragPipelineShaderStageCreateInfo };
+
+    VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo{};
+    pipelineVertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = 0;
+    pipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = 0;
+
+    VkPipelineInputAssemblyStateCreateInfo PipelineInputAssemblyStateCreateInfo{};
+
+    PipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    PipelineInputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    PipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
+
+
+    VkGraphicsPipelineCreateInfo GraphicsPipelineCreateInfo{};
+    GraphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    GraphicsPipelineCreateInfo.stageCount = 2;
+    GraphicsPipelineCreateInfo.pStages = shaderStages;
+    GraphicsPipelineCreateInfo.pVertexInputState = &pipelineVertexInputStateCreateInfo;
+    GraphicsPipelineCreateInfo.pInputAssemblyState = &PipelineInputAssemblyStateCreateInfo;
+
+    
+    vkCreateGraphicsPipelines(logicalDevice, VK_NULL_HANDLE, 1, &GraphicsPipelineCreateInfo,nullptr,&graphicsPipeline);
 }
 
 
@@ -280,34 +348,8 @@ Window::~Window() {
 	glfwTerminate();
 }
 
-int shaderCount = 2;
-std::vector<char> shaderCode;
-std::vector <VkShaderModule> shadersModules(shaderCount);
-void Window::LoadShaders() {
 
-    for (size_t i = 0; i < shaderCount; i++)
-    {
-        VkShaderModuleCreateInfo ShaderModuleCreateInfo{};
-        if (i == 1) {
-            shaderCode = shader->ReadShader("shaders/vert.spv");
-        }
-        else {
-            shaderCode = shader->ReadShader("shaders/frag.spv");
 
-        }
-        ShaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        ShaderModuleCreateInfo.codeSize = shaderCode.size();
-        ShaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
-        VkShaderModule ShaderModule;
-
-        vkCreateShaderModule(logicalDevice, &ShaderModuleCreateInfo, nullptr, &ShaderModule);
-        shadersModules.push_back(ShaderModule);
-    }
-    
-    vertModule = shadersModules[0];
-    fragModule = shadersModules[1];
-
-}
 
 GLFWwindow* Window::GetCurrentWindow() {
 

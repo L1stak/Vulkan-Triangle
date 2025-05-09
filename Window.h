@@ -28,5 +28,6 @@
 		VkRenderPass renderPass;
 		VkShaderModule vertModule;
 		VkShaderModule fragModule;
+		VkPipeline graphicsPipeline = NULL;
 	};
 
