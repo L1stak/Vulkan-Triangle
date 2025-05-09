@@ -22,5 +22,7 @@
 		GLFWwindow* window = nullptr;
 		VkPhysicalDeviceProperties  GPU_info;
 		VkSurfaceKHR surface;
+		VkDevice logicalDevice;
+		VkRenderPass renderPass;
 	};
 

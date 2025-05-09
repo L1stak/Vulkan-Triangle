@@ -125,7 +125,7 @@ Window::Window(const char* title) {
 
 
 
-    VkDevice logicalDevice;
+    
     vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &logicalDevice);
 
 
@@ -229,6 +229,40 @@ Window::Window(const char* title) {
         imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
         imageViewCreateInfo.subresourceRange.layerCount = 1;
         vkCreateImageView(logicalDevice, &imageViewCreateInfo, nullptr, &swapChainImageView[i]);
+
+
+        //render Pass
+        VkAttachmentDescription colorAttachmentDescription{};
+        colorAttachmentDescription.format = surfaceFormat.format;
+        colorAttachmentDescription.samples = sampleBits; // сглаживание
+        colorAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachmentDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        
+        VkAttachmentReference  colorAttachmentReference{};
+        colorAttachmentReference.attachment = 0;
+        colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpassDescription{};
+
+        subpassDescription.colorAttachmentCount = 1;
+        subpassDescription.pColorAttachments = &colorAttachmentReference;
+        subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+
+
+
+        VkRenderPassCreateInfo renderPassCreateInfo{};
+        renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassCreateInfo.attachmentCount = 1;
+        renderPassCreateInfo.pAttachments = &colorAttachmentDescription;
+        renderPassCreateInfo.subpassCount = 1;
+        renderPassCreateInfo.pSubpasses = &subpassDescription;
+
+
+        vkCreateRenderPass(logicalDevice, &renderPassCreateInfo, nullptr, &renderPass);
 
     }
 }
