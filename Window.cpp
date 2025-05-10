@@ -11,6 +11,7 @@ std::vector <VkShaderModule> shadersModules(shaderCount);
 std::vector<VkFence> inFlightFences(MAX_FRAMES_IN_FLIGHT);
 std::vector<VkCommandBuffer> commandBuffers(MAX_FRAMES_IN_FLIGHT);
 std::vector<VkSemaphore> imageAvalibleSemaphores(MAX_FRAMES_IN_FLIGHT);
+std::vector<VkSemaphore> renderFinishedSemaphores(2);
 void Window::LoadShaders() {
 
     for (size_t i = 0; i < shaderCount; i++)
@@ -455,14 +456,16 @@ Window::Window(const char* title) {
 
     
     
-    std::vector<VkSemaphore> renderFinishedSemaphores(MAX_FRAMES_IN_FLIGHT);
+    
 
     VkSemaphoreCreateInfo SemaphoreCreateInfo{};
     SemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
     VkFenceCreateInfo FenceCreateInfo{};
     FenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-
+    renderFinishedSemaphores.resize(2);
+    inFlightFences.resize(2);
+    imageAvalibleSemaphores.resize(2);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         vkCreateSemaphore(logicalDevice, &SemaphoreCreateInfo, nullptr, &imageAvalibleSemaphores[i]);

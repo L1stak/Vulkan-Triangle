@@ -1,6 +1,7 @@
 #include "Window.h"
 #include "Shader.h"
 #include <vector>
+#include <iostream>
 //#include <vulkan/vulkan.h>
 Window* win = new Window("vulkan test");
 int main() {
@@ -26,6 +27,17 @@ int main() {
 
         vkAcquireNextImage2KHR(device, &acquireInfo,&imageIndex);
       
+        vkResetCommandBuffer(commandBuffer[frame], 0);
+
+        VkCommandBufferBeginInfo CommandBufferBeginInfo{};
+        CommandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+        vkBeginCommandBuffer(commandBuffer[frame], &CommandBufferBeginInfo);
+
+
+       
+
+
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         VkSemaphore waitSemaphores[] = { ImageAvalibleSemaphoress[frame]};
         VkSubmitInfo SubmitInfo{};
@@ -35,8 +47,12 @@ int main() {
         SubmitInfo.pWaitDstStageMask = waitStages;
         SubmitInfo.waitSemaphoreCount = 1;
         SubmitInfo.pWaitSemaphores = waitSemaphores;
-
-        vkQueueSubmit(win->GetGraphicsQueue(),1,&SubmitInfo,win->GetinFlightFences()[frame]);
+        try {
+            vkQueueSubmit(win->GetGraphicsQueue(), 1, &SubmitInfo, win->GetinFlightFences().at(frame));
+        }
+        catch (const std::runtime_error& e) {
+            std::cout << "Caught an exception: " << e.what() << std::endl;
+        }
         frame = (frame + 1) % 2; //MAX_FRAMES_IN_FLIGHT
     }
 
